@@ -29,8 +29,9 @@ class AdminEverPsDisposableController extends ModuleAdminController
         $this->identifier = 'id_everpsdisposable';
         $this->isSeven = Tools::version_compare(_PS_VERSION_, '1.7', '>=') ? true : false;
         $this->context->smarty->assign(array(
-            'everpsdisposable_dir' => _PS_BASE_URL_ . '/modules/everpsdisposable/'
+            'everpsdisposable_dir' => Tools::getHttpHost(true).__PS_BASE_URI__ . '/modules/everpsdisposable/'
         ));
+        
         $this->bulk_actions = array(
             'delete' => array(
                 'text' => $this->l('Delete selected'),

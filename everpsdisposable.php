@@ -23,7 +23,7 @@ class EverPsDisposable extends Module
     {
         $this->name = 'everpsdisposable';
         $this->tab = 'administration';
-        $this->version = '1.1.4';
+        $this->version = '1.1.5';
         $this->author = 'Team Ever';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -102,6 +102,9 @@ class EverPsDisposable extends Module
         ));
 
         $this->html .= $this->context->smarty->fetch($this->local_path.'views/templates/admin/header.tpl');
+        if ($this->checkLatestEverModuleVersion($this->name, $this->version)) {
+            $this->html .= $this->context->smarty->fetch($this->local_path.'views/templates/admin/upgrade.tpl');
+        }
         $this->html .= $this->renderForm();
         $this->html .= $this->context->smarty->fetch($this->local_path.'views/templates/admin/footer.tpl');
 
@@ -312,7 +315,6 @@ class EverPsDisposable extends Module
     private function getDisposableEmail($email)
     {
         $domain = Tools::substr($email, Tools::strpos($email, '@') + 1);
-        die(var_dump($domain));
         $sql = new DbQuery();
         $sql->select('id_everpsdisposable');
         $sql->from('everpsdisposable');
@@ -325,7 +327,29 @@ class EverPsDisposable extends Module
         $validityPattern = Tools::cleanNonUnicodeSupport(
             '/^(?:[^0-9!<>,;?=+()\/\\@#"°*`{}_^$%:¤\[\]|\.。]|[\.。](?:\s|$))*$/u'
         );
-
         return !preg_match($validityPattern, $name);
+    }
+
+    public function checkLatestEverModuleVersion($module, $version)
+    {
+        $upgrade_link = 'https://upgrade.team-ever.com/upgrade.php?module='
+        .$module
+        .'&version='
+        .$version;
+        $handle = curl_init($upgrade_link);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($handle);
+        $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+        if ($httpCode != 200) {
+            return false;
+        }
+        $module_version = Tools::file_get_contents(
+            $upgrade_link
+        );
+        if ($module_version && $module_version > $version) {
+            return true;
+        }
+        return false;
     }
 }
